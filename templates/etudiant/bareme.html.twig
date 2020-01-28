@@ -1,11 +1,11 @@
 {% extends 'base.html.twig' %}
 {% block body %}
 
-    <p> Ici vous pouvez parametrer un bareme !	 </p>
+    <p> Ici vous pouvez paramétrer un barème !	 </p>
     
    <form method = "get" action="http://webinfo.iutmontp.univ-montp2.fr/~cadarsir/pag/public/index.php/bareme/verifybareme">
    	<div>
-   		<p> Pour toutes les intervalles fermante de fin, vous pouvez laisser blanc pour indiquer une valeur supérieure à la borne inférieure. </p>	
+   		<p> Pour tous les intervalles pour 5 points, vous pouvez ne rien mettre à la borne finale pour indiquer une valeur supérieure à la borne inférieure. </p>	
    		<p> Donnez une description à votre barème : </p>
    		Nom de votre barème :<input type="text" name="nom" required/><br>
 
@@ -23,7 +23,7 @@ Intervalle pour 3pt: <input type="number" name="2param31" value="90"><input type
 Intervalle pour 4pt: <input type="number" name="2param41" value="150"><input type="number" name="2param42" value="180"><br>
 Intervalle pour 5pt: <input type="number" name="2param51" value="180"><input type="number" name="2param52" value=""><br>
 <br>
-<p> Comment déterminer les points pour le nombre de niveaux acquis? ? : <br> </p>
+<p> Comment déterminer les points pour le nombre de niveaux acquis ? : <br> </p>
 Intervalle pour 1pt: <input type="number" name="3param11" value="0"><input type="number" name="3param12" value="4"><br>
 Intervalle pour 2pt: <input type="number" name="3param21" value="4"><input type="number" name="3param22" value="6"><br>
 Intervalle pour 3pt: <input type="number" name="3param31" value="6"><input type="number" name="3param32" value="7"><br>

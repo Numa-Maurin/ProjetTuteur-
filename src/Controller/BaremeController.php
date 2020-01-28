@@ -161,7 +161,12 @@ class BaremeController extends AbstractController
             $critere->setNiveauAtteint($criteres[2]);
             $critere->setEvaluationFinale(20);
             $entityManager->persist($critere);
-            $entityManager->flush();
+            try {
+              $entityManager->flush();  
+            }
+            catch(Exception $e){
+                return "Ce bareme a deja ete cree !";
+            }
             $product = $repository->findOneBy([
             	'progression' => $criteres[0],
             	'tpsUtilisation' => $criteres[1],
@@ -172,8 +177,15 @@ class BaremeController extends AbstractController
             $bareme->setFavoriBareme($favori);
             $bareme->setIdCritere( $product->getIdCritere());
             $entityManager->persist($bareme);
-            $entityManager->flush();
-            return "Bareme validé ! <a href= \"http://webinfo.iutmontp.univ-montp2.fr/~cadarsir/pag/public/index.php/etudiant\" > Retourner sur la page d'accueil </a>";
+            try { 
+                $entityManager->flush();
+                return "Bareme validé ! <a href= \"http://webinfo.iutmontp.univ-montp2.fr/~cadarsir/pag/public/index.php/etudiant\" > Retourner sur la page d'accueil </a>";
+            }
+            catch(Exception $e){
+                return "Ce bareme a deja ete cree !";
+            }
+            
+            
 
         }
 

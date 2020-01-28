@@ -65,6 +65,21 @@ class EtudiantController extends AbstractController
     }
 
     /**
+     * @Route("/sendmail", name="Envoyer un mail à son professeur")
+     */
+    public function sendmail()
+    {
+    	$content = "Bonjour ";
+    	$content = $content . $_POST['enseignant'] . ". Vous avez reçu le message suivant de l'étudiant ". $_POST['name'] . "\n \"". $_POST['comments'] . "\"";
+    	mail("enseignant@yopmail.com","Nouveau Mail Etudiant",$content);
+    	return $this->render('etudiant/pagereponse.html.twig', [
+    		'message' => "Le message à été envoyé.",
+    		'titre' => "Message envoyé",
+    	]);
+    }
+
+
+    /**
      * @Route("/etudiant/generateCSV", name="Création du fichier csv")
      */
     public function generateCSV()
@@ -596,15 +611,16 @@ class EtudiantController extends AbstractController
 
 			else{
 				$etudiant = $etudiantRepository->findOneBy(["login" => $row1[$identifiant1]]);
-				if(!$etudiant){
+				if(!$etudiant && !in_array($row1[$identifiant1],$studentArray)){
 					$etudiant = new VoltaireEtudiant();
 					$etudiant->setNomEtudiant($row1[$nom1]);
 					$etudiant->setPrenomEtudiant($row1[$prenom1]);
 					$etudiant->setLogin($row1[$identifiant1]);
 					$etudiant->setGroupe($row1[$groupe1]);
 					$etudiant->setidBareme(0);
+					array_push($studentArray, $row1[$identifiant1]);
 					$entityManager->persist($etudiant);
-					echo "L'étudiant " . $row1[$nom1] . " " . $row1[$prenom1] . "a été ajouté a la base de donnée par la même occasion, veuillez relancer l'importation du fichier pour prendre en compte ses résultats.";
+					echo "L'étudiant " . $row1[$nom1] . " " . $row1[$prenom1] . " a été ajouté a la base de donnée par la même occasion, veuillez relancer l'importation du fichier pour prendre en compte ses résultats.";
 				}
 					$module = $moduleRepository->findOneBy(["nomModule" => $row1[$module1]]);
 					$resultat = new VoltaireResultats();	
@@ -905,8 +921,10 @@ class EtudiantController extends AbstractController
 	* @Route("/etudiant/noterEtudiant/{identifiant}", methods={"GET","HEAD"})
 	*/
 	public function noterEtudiant($identifiant){
+		// Cette fonction est appelée pour afficher les détails d'un étudiant.
 		$point = 0;
 		$serializedtps = array();
+		//Données a serialiser pour l'affichage des graphiques avec les modules (serializedm1 correspond au module 1 ainsi de suite avec les 6 modules)
 		$serializedm1 = array();
 		$serializedm2 = array();
 		$serializedm3 = array();
@@ -941,7 +959,7 @@ class EtudiantController extends AbstractController
 		if(!$resultatniveaufinal){
 			$notersurFinal = 0;
 		}
-		else{$progression = $resultatniveaufinal->getScoreEvaluation() - $resultatniveauinitial->getScoreEvaluation(); $notersurFinal =1;}
+		else{$progression = $resultatniveaufinal->getScoreEvaluation() - $resultatniveauinitial->getScoreEvaluation(); $notersurFinal =1;$scoreevalfinale = $resultatniveaufinal->getScoreEvaluation();}
 		$niveauatteint = count($resultatniveauRepository->findBy(["idEtudiant" => $etudiant->getLogin() , "niveauAtteint" => '100', "dateExport" => EtudiantController::getDateMaxResultatNiveaux()]));
 		$tpsUtilisation = $resultat->getTpsTotal();
 		$c1 = explode(";",$critere->getProgression());$c10 = explode(",",$c1[0]);$c11 = explode(",",$c1[1]);$c12 = explode(",",$c1[2]);$c13 = explode(",",$c1[3]);$c14 = explode(",",$c1[4]);$c2 = explode(";",$critere->getTpsUtilisation());$c20 = explode(",",$c2[0]);$c21 = explode(",",$c2[1]);$c22 = explode(",",$c2[2]);$c23 = explode(",",$c2[3]);$c24 = explode(",",$c2[4]);$c3 = explode(";",$critere->getNiveauAtteint());$c30 = explode(",",$c3[0]);$c31 = explode(",",$c3[1]);$c32 = explode(",",$c3[2]);$c33 = explode(",",$c3[3]);$c34 = explode(",",$c3[4]);
@@ -963,6 +981,13 @@ class EtudiantController extends AbstractController
 		elseif(date_format($tpsUtilisation,"H:i:s")>=gmdate('H:i:s', strval($c21[0]) * 60) && date_format($tpsUtilisation,"H:i:s")<gmdate('H:i:s', strval($c21[1]) * 60)){$point += 2;$pointTps = 2;}
 		elseif(date_format($tpsUtilisation,"H:i:s")>=gmdate('H:i:s', strval($c20[0]) * 60) && date_format($tpsUtilisation,"H:i:s")<gmdate('H:i:s', strval($c20[1]) * 60)){$point += 1;$pointTps = 1;}
 		else{$point += 0;$pointTps = 0;}
+		if($notersurFinal == 0){$point += 0;$pointEvalfinale = 0;} 
+		else{ if($scoreevalfinale = 100){$point += 5;$pointEvalfinale = 5;}
+		elseif($scoreevalfinale>=75 && $scoreevalfinale<100){$point += 4;$pointEvalfinale = 4;}
+		elseif($scoreevalfinale>=50 && $scoreevalfinale<75){$point += 3;$pointEvalfinale = 3;}
+		elseif($scoreevalfinale>=25 && $scoreevalfinale<50){$point += 2;$pointEvalfinale = 2;}
+		elseif($scoreevalfinale>=0 && $scoreevalfinale<25){$point += 1;$pointEvalfinale = 1;}
+		else{$point += 0;$pointEvalfinale = 0;}}
 		$tps =  $resultat->getTpsTotal()->format('H:i:s');
 		foreach ($resultatniveauActuel as $resultats) {
 			array_push($serializedtpsniv, date_format($resultats->getTpsTotal(),"i"));
@@ -971,7 +996,7 @@ class EtudiantController extends AbstractController
 			array_push($serializedlgniv, $niv->getNomNiveau());
 		}
 		foreach ($resultgraph as $result) {
-			array_push($serializedtps, date_format($result->getTpsTotal(),"i"));
+			array_push($serializedtps, date_format($result->getTpsTotal(),"i") + date_format($result->getTpsTotal(),"H") * 60);
 			array_push($serializedm1,$result->getNiveauAtteint());
 		}
 		foreach ($resultgraph2 as $result) {
@@ -1019,7 +1044,8 @@ class EtudiantController extends AbstractController
 			'serializedm5' => $serializedm5,
 			'serializedm6' => $serializedm6,
 			'serializedtpsniv' => $serializedtpsniv,
-			'serializedlgniv' => $serializedlgniv
+			'serializedlgniv' => $serializedlgniv,
+			'pointEvalfinale' => $pointEvalfinale
 
 		]);
 	}
@@ -1047,7 +1073,7 @@ class EtudiantController extends AbstractController
 			$progression = 0;
 			$noteEvalFinale = 0;
 		}
-		else{$progression = $resultatniveaufinal->getScoreEvaluation() - $resultatniveauinitial->getScoreEvaluation(); $notersurFinal =1; $noteEvalFinale = $resultatniveaufinal->get('scoreEvaluation'); }
+		else{$progression = $resultatniveaufinal->getScoreEvaluation() - $resultatniveauinitial->getScoreEvaluation(); $notersurFinal =1;$scoreevalfinale = $resultatniveaufinal->getScoreEvaluation();}
 		$niveauatteint = count($resultatniveauRepository->findBy(["idEtudiant" => $etudiant->getLogin() , "niveauAtteint" => '100', "dateExport" => EtudiantController::getDateMaxResultatNiveaux()]));
 		$tpsUtilisation = $resultat->getTpsTotal();
 		$c1 = explode(";",$critere->getProgression());
@@ -1144,7 +1170,13 @@ class EtudiantController extends AbstractController
 			$pointTps = 0;
 		}
 
-		$point += $noteEvalFinale;
+		if($notersurFinal == 0){$point += 0;$noteEvalFinale = 0;} 
+		else{ if($scoreevalfinale = 100){$point += 5;$noteEvalFinale = 5;}
+		elseif($scoreevalfinale>=75 && $scoreevalfinale<100){$point += 4;$noteEvalFinale = 4;}
+		elseif($scoreevalfinale>=50 && $scoreevalfinale<75){$point += 3;$noteEvalFinale = 3;}
+		elseif($scoreevalfinale>=25 && $scoreevalfinale<50){$point += 2;$noteEvalFinale = 2;}
+		elseif($scoreevalfinale>=0 && $scoreevalfinale<25){$point += 1;$noteEvalFinale = 1;}
+		else{$point += 0;$noteEvalFinale = 0;}}
 		
 		array_push($points, $point);
 		array_push($points, $pointProgression);

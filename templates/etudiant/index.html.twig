@@ -1,14 +1,14 @@
 {% extends 'base.html.twig' %}
 {% block title %} Accueil {% endblock %}
 {% block body %}
-<h1> Bienvenue sur le site du VoltaireQ2Project ! 
+<h1> Bienvenue sur le site Exploitation des données du site Projet Voltaire
 
 {% if is_granted('ROLE_ADMIN') %}
-  {{user.login}} ! </h1>
+  {{user.login}}. ! </h1>
 {% elseif is_granted('ROLE_USER') %}
     {% for etudiant in alletudiant %}
         {% if etudiant.login == user.login %}
-            {{etudiant.nomEtudiant}} {{etudiant.prenomEtudiant}}</h1>
+            {{etudiant.nomEtudiant}} {{etudiant.prenomEtudiant}}.</h1>
         {% endif %}
     {% endfor %}
 {% endif %}
@@ -16,7 +16,7 @@
 
 
 {% if is_granted('ROLE_ADMIN') %}
-<p> Voici la liste des étudiants disponibles sur notre base de donnée , il y en a {{etudiants|length}} . Groupe : {{groupeactuel}} </p>
+<p> Voici la liste des étudiants disponibles sur notre base de données , il y en a {{etudiants|length}} . Groupe : {{groupeactuel}} </p>
 <table>
     <tr>
         <th class=colonne> Nom Etudiant </th>
